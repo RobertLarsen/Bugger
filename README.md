@@ -22,7 +22,7 @@ and you should be ready to do some testing. Just run `bugger` and it will look f
 I usually execute `bugger` every time I save my work using a command like this:
 
 ```
-$ while true; do find src -type f -o -type d | entr bugger ; done
+$ while true; do find src -type f -o -type d | entr -cd bugger ; done
 ```
 
 So that is how to install and run, but how do you actually write tests? Read on.
