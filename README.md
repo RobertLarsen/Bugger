@@ -75,14 +75,14 @@ three keys: `environment`, `settings` and `command_groups` such as:
 }
 ```
 
-All (well, most) strings in the file can be subject to a set of expansion rules
+All (well, most) strings in the file can be subjected to a set of expansion rules
 before being used. This means you can use environment variables or the output of
 commands inside strings. More on that later.
 
 ## `environment`
 
 This block sets environment variables that will be used thruout the rest of the
-file. These can be added to or overridden in actual tests.
+file. These can be added to or overridden in individual tests.
 
 Bugger creates two variables for you, `BUGGER_FILE` which points to the top
 level test file and `BUGGER_DIR` which points to the directorie which contins
@@ -90,8 +90,8 @@ it.
 
 ## `settings`
 
-The settings tells Bugger how to behave. These can be set in the top level
-object or in specific tests which overrides the global ones. Each individual
+The settings tell Bugger how to behave. These can be set in the top level
+object or in individual tests which overrides the global ones. Each individual
 setting will be described next.
 
 ### `timeout`
