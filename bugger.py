@@ -534,7 +534,7 @@ class Bugger(object):
 
         # Add environment variables
         os.environ['BUGGER_FILE'] = str(os.path.realpath(conf_path))
-        os.environ['BUGGER_DIR'] = str(os.path.dirname(os.environ['bugger_FILE']))
+        os.environ['BUGGER_DIR'] = str(os.path.dirname(os.environ['BUGGER_FILE']))
         if 'environment' in conf:
             for k, v in conf['environment'].items():
                 try:
