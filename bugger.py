@@ -481,7 +481,16 @@ def resolve_includes(conf, conf_path):
     if 'command_groups' in conf:
         for group_name, group_value in conf['command_groups'].items():
             if type(group_value) == dict:
-                conf['command_groups'][group_name] = include(group_value)
+                group_value = include(group_value)
+
+            while True:
+                included = next(iter(c for c in group_value if 'include' in c), None)
+                if included is None:
+                    break
+                idx = group_value.index(included)
+                group_value = group_value[:idx] + include(group_value[idx]) + group_value[idx + 1:]
+
+            conf['command_groups'][group_name] = group_value
 
     return conf
 
@@ -521,6 +530,7 @@ class Bugger(object):
     def __init__(self, conf, conf_path):
         self.groups: List[CommandGroup] = []
         self._conf = resolve_includes(conf, conf_path)
+
         self._settings = {
            'timeout': 10,
            'exit-on-fail': False,
