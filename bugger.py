@@ -462,10 +462,8 @@ class Command(object):
         return self._sign() + ' ' + self.name
 
 def resolve_includes(conf, conf_path):
-    def include(inc):
-        if not 'include' in inc:
-            raise Exception('Missing include')
-        path = os.path.join(os.path.dirname(conf_path), inc['include'])
+    def inc_path(inc, p):
+        path = os.path.join(os.path.dirname(conf_path), p)
         if not os.path.isfile(path):
             raise Exception(f'{path} is not a file')
         obj = None
@@ -477,6 +475,18 @@ def resolve_includes(conf, conf_path):
                 for t in obj:
                     t[decoration] = dict_concat(inc[decoration], t[decoration] if decoration in t else None)
         return obj
+
+    def include(inc):
+        if not 'include' in inc:
+            raise Exception('Missing include')
+
+        if type(inc['include']) == list:
+            res = []
+            for i in [inc_path(inc, p) for p in inc['include']]:
+                res += i
+            return res
+        else:
+            return inc_path(inc, inc['include'])
 
     if 'command_groups' in conf:
         for group_name, group_value in conf['command_groups'].items():
