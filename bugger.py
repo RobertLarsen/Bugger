@@ -139,7 +139,8 @@ def normalize(s: Union[str,int,None,list,dict], environ=os.environ) -> Union[str
                 if count == 0:
                     return i
 
-    regex = '\\$({})'.format('|'.join('\\' + p[0] for p in pairs))
+    formatted = '|'.join('\\' + p[0] for p in pairs)
+    regex = f"\\$({formatted})"
 
     if isinstance(s, str):
         while True:
@@ -169,7 +170,7 @@ def normalize(s: Union[str,int,None,list,dict], environ=os.environ) -> Union[str
                 elif default_value is not None:
                     n = default_value
                 else:
-                    raise Exception('Unresolved environment variable: {}'.format(n))
+                    raise Exception(f"Unresolved environment variable: {n}")
 
                 for filter_name in filter_names:
                     try:
@@ -181,7 +182,7 @@ def normalize(s: Union[str,int,None,list,dict], environ=os.environ) -> Union[str
             elif str(s)[idx1 + 1] == '(':
                 proc = run(['/bin/bash', '-c', n], stdout=PIPE, stderr=STDOUT)
                 if proc.returncode != 0:
-                    raise Exception('Could not execute command: {}'.format(n))
+                    raise Exception(f"Could not execute command: {n}")
                 n = proc.stdout.decode('utf8')
             s = str(s)[:idx1] + n + str(s)[idx2 + 1:]
 
@@ -204,7 +205,7 @@ class Writer(object):
     def decrement(self):
         self.indentation -= 1
     def ansi(self, code):
-        return self('\x01{}\x02'.format(code), False)
+        return self(f"\x01{code}\x02", False)
     @be_str
     def __call__(self, t, count=True):
         if count:
@@ -437,7 +438,7 @@ class Command(object):
             elif proc.returncode < 0:
                 self.state = Command.STATE_SIGNALED
                 self.signal = -proc.returncode
-                return self._fail('Terminated by signal {}'.format(signals.get(-proc.returncode, str(-proc.returncode))))
+                return self._fail(f"Terminated by signal {signals.get(-proc.returncode, str(-proc.returncode))}")
             else:
                 self.state = Command.STATE_FAILED
                 return self._fail()
@@ -591,8 +592,8 @@ class Bugger(object):
                     for t in self._conf['command_groups'][group_name]:
                         c = Command(t, group.name, self._settings) \
                         .on_execute(lambda c: term.stdout.yellow(str(c))(': ').blue(' '.join([e.replace('\n', '') for e in [c.path] + c.args]))) \
-                        .on_success(lambda c: term.stdout.green(str(c))(' ({:.3f} secs): '.format(c.duration or 0.0)).blue(c.strout.split('\n')[0]).end())  \
-                        .on_failure(lambda c, e: term.stdout.red(str(c))(' ({:.3f} secs): '.format(c.duration)).blue(e.split('\n')[0]).end()) \
+                        .on_success(lambda c: term.stdout.green(str(c))(f" ({c.duration or 0.0:.3f} secs): ").blue(c.strout.split('\n')[0]).end())  \
+                        .on_failure(lambda c, e: term.stdout.red(str(c))(f" ({c.duration:.3f} secs): ").blue(e.split('\n')[0]).end()) \
                         .on_skipped(lambda c: term.stdout(str(c))(': SKIPPED!').end())
                         group.append(c)
 
