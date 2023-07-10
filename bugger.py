@@ -87,9 +87,10 @@ def dict_concat(*dicts: Union[Dict[str,str], os._Environ, None]) -> Dict[str,str
 
 def normalize_dict(d: Dict[str,str], environ=os.environ) -> Union[Dict[str,str],None]:
     if d:
+        c = dict_concat(d, environ)
         res = {}
         for key, val in d.items():
-            res[key] = normalize(val, environ)
+            res[key] = normalize(val, c)
         return res
 
 def get_terminal_size() -> Tuple[int,int]:
