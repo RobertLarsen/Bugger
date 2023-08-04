@@ -310,6 +310,11 @@ class Command(object):
             return self._settings[name]
 
     @property
+    def is_disabled(self):
+        d = self.disabled
+        return d and self.name in d
+
+    @property
     def failed(self):
         return self.state in (Command.STATE_FAILED, Command.STATE_SIGNALED, Command.STATE_TIMED_OUT)
 
@@ -595,7 +600,9 @@ class Bugger(object):
                         .on_success(lambda c: term.stdout.green(str(c))(f" ({c.duration or 0.0:.3f} secs): ").blue(c.strout.split('\n')[0]).end())  \
                         .on_failure(lambda c, e: term.stdout.red(str(c))(f" ({c.duration:.3f} secs): ").blue(e.split('\n')[0]).end()) \
                         .on_skipped(lambda c: term.stdout(str(c))(': SKIPPED!').end())
-                        group.append(c)
+                        print(f"{c.name}: {c.is_disabled}")
+                        if not c.is_disabled:
+                            group.append(c)
 
     @property
     def commands(self) -> Generator[Command, None, None]:
