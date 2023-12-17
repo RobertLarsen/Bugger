@@ -515,7 +515,11 @@ class CommandGroup(object):
     def __init__(self, name: str, bugger: 'Bugger'):
         self.name = name
         self.bugger = bugger
+        self.disabled = False
         self.commands: List[Command] = []
+
+    def disable(self):
+        self.disabled = True
 
     @property
     def pending(self) -> bool:
@@ -538,7 +542,7 @@ class CommandGroup(object):
 
     @property
     def is_disabled(self) -> bool:
-        return self.name.startswith('_')
+        return self.disabled or self.name.startswith('_')
 
     def append(self, command: Command):
         self.commands.append(command)
@@ -588,6 +592,10 @@ class Bugger(object):
     def should_collapse(self) -> bool:
         return self.enable_collapse and get_terminal_size()[0] < self.line_count
 
+    def each_group(self):
+        for g in self.groups:
+            yield g
+
     def _create_commands(self):
         for group_name in self._conf['command_groups'].keys():
             group = CommandGroup(normalize(group_name), self)
@@ -600,7 +608,6 @@ class Bugger(object):
                         .on_success(lambda c: term.stdout.green(str(c))(f" ({c.duration or 0.0:.3f} secs): ").blue(c.strout.split('\n')[0]).end())  \
                         .on_failure(lambda c, e: term.stdout.red(str(c))(f" ({c.duration:.3f} secs): ").blue(e.split('\n')[0]).end()) \
                         .on_skipped(lambda c: term.stdout(str(c))(': SKIPPED!').end())
-                        print(f"{c.name}: {c.is_disabled}")
                         if not c.is_disabled:
                             group.append(c)
 
@@ -752,6 +759,7 @@ class Bugger(object):
                 is_true(self._settings['animation'])
 
     def __call__(self):
+        self.groups = [g for g in self.groups if not g.is_disabled]
         self._print_pre_run()
         self._set_animation_timer()
         self._run()
@@ -762,13 +770,17 @@ class Bugger(object):
 
         return 0 if all(c.state == Command.STATE_SUCCESSFUL for c in self.commands) else 1
 
-def main(test_config_path='./bugger.json'):
+def main(test_config_path='./bugger.json', *enabled):
     if not os.path.isfile(test_config_path):
         term.stderr.blue(test_config_path).red(' is missing or not a file\n')
     else:
         try:
             with open(test_config_path) as f:
                 r = Bugger(json.loads(f.read()), test_config_path)
+                if enabled:
+                    for g in r.each_group():
+                        if g.name not in enabled:
+                            g.disable()
                 return r()
         except PermissionError:
             term.stderr.red('Could not open ').blue(test_config_path).red(' for reading')
