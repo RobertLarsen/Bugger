@@ -296,6 +296,13 @@ class Command(object):
         self.output = None
         self.duration = None
 
+        for k, v in conf.items():
+            if k == 'expected-signal' and type(v) == int:
+                conf[k] = -v
+        for k, v in settings.items():
+            if k == 'expected-signal' and type(v) == int:
+                settings[k] = -v
+
         self._conf = conf
         self._settings = settings
         self._success = None
@@ -412,7 +419,7 @@ class Command(object):
                 if i in self._conf and isinstance(self._conf[i], list):
                     self._conf[i] = '\n'.join(self._conf[i])
 
-            if proc.returncode == self.__getattr__('expected-exit-code'):
+            if proc.returncode in (self.__getattr__('expected-exit-code'), self._conf.get('expected-signal', None)):
                 if 'output-matches' in self._conf:
                     if self._conf['output-matches'] != self.strout:
                         self.state = Command.STATE_FAILED
@@ -556,6 +563,7 @@ class Bugger(object):
            'timeout': 10,
            'exit-on-fail': False,
            'expected-exit-code': 0,
+           'expected-signal': None,
            'animation': True,
            'enable-collapse': True
         }
